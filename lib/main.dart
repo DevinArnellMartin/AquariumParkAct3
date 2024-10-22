@@ -24,14 +24,15 @@ class AquariumScreen extends StatefulWidget {
   const AquariumScreen({super.key});
 
   @override
-  _AquariumScreenState createState() => _AquariumScreenState();
+  AquariumState createState() => AquariumState();
 }
 
-class _AquariumScreenState extends State<AquariumScreen> {
+class AquariumState extends State<AquariumScreen> {
   List<Fish> fishList = [];
   Color colour = Colors.blue;
   double speed = 1.2;
   final int maximum = 11;
+  List<Color> colors = [Colors.blue, Colors.green, Colors.red]; 
 
   
   void addFish() {
@@ -60,70 +61,85 @@ class _AquariumScreenState extends State<AquariumScreen> {
     setState(() {
       fishList = List.generate(fishCount ?? 0, (_) => Fish(color: Color(fishColor ?? Colors.blue.value), speed: fishSpeed ?? 1.0));
       speed = fishSpeed ?? 1.0;
-      colour = Color(fishColor ?? Colors.blue.value);
+      Color loadedColor = Color(fishColor ?? Colors.blue.value);
+      if (colors.contains(loadedColor)) {
+        colour = loadedColor; 
+      } else {
+        colour = colors[0]; 
+      }
+      //colour = Color(fishColor ?? Colors.blue.value);
+
     });
   }
 
   @override
   void initState() {
-    super.initState();
-    load();  
+  super.initState();
+  colour = colors[0]; 
+  load();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Aquarium Simulator'),
-      ),
-      body: Column(
-        children: [
-          Container(
-            width: 300,
-            height: 300,
-            color: Colors.blue[100],
-            child: Stack(
-              children: fishList.map((fish) => fishWidget(fish)).toList(),
-            ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Aquarium Park'),
+    ),
+    body: Column(
+      children: [
+        Container(
+          width: 300,
+          height: 300,
+          color: Colors.blue[100],
+          child: Stack(
+            children: fishList.map((fish) => fishWidget(fish)).toList(),
           ),
-          Slider(
-            value: speed,
-            min: 0.5,
-            max: 3.0,
-            label: 'Speed: ${speed.toStringAsFixed(1)}',
-            onChanged: (value) {
-              setState(() {
-                speed = value;
-              });
-            },
-          ),
-          DropdownButton<Color>(
-            value: colour,
-            items: [
-              DropdownMenuItem(value: Colors.blue, child: Text('Blue')),
-              DropdownMenuItem(value: Colors.red, child: Text('Red')),
-              DropdownMenuItem(value: Colors.green, child: Text('Green')),
-            ],
-            onChanged: (color) {
-              setState(() {
-                colour = color!;
-              });
-            },
-          ),
-          ElevatedButton(
-            onPressed: addFish,
-            child: const Text('Add Fish'),
-          ),
-          ElevatedButton(
-            onPressed: save,
-            child: const Text('Save Settings'),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        Slider(
+          value: speed,
+          min: 0.5,
+          max: 3.0,
+          label: 'Speed: ${speed.toStringAsFixed(1)}',
+          onChanged: (value) {
+            setState(() {
+              speed = value;
+            });
+          },
+        ),
+        DropdownButton<Color>(
+          hint: const Text("Select a colour"),
+          value: colour,
+          items: colors.map((Color color) {
+            return DropdownMenuItem<Color>(
+              value: color,
+              child: Container(
+                width: 24,
+                height: 24,
+                color: color,
+              ),
+            );
+          }).toList(),
+          onChanged: (color) {
+            setState(() {
+              if (color != null) {
+                colour = color;
+              }
+            });
+          },
+        ),
+        ElevatedButton(
+          onPressed: addFish,
+          child: const Text('Add Fish'),
+        ),
+        ElevatedButton(
+          onPressed: save,
+          child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
+}
 
-  // Widget to represent a fish
   Widget fishWidget(Fish fish) {
     return AnimatedPositioned(
       duration: Duration(milliseconds: (2000 / fish.speed).round()),
@@ -131,7 +147,7 @@ class _AquariumScreenState extends State<AquariumScreen> {
       left: fish.xPos,
       child: CircleAvatar(backgroundColor: fish.color),
       onEnd: () {
-        // Randomly move fish
+        
         setState(() {
           fish.randomMove();
         });
